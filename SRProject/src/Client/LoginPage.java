@@ -1,6 +1,5 @@
 package Client;
 
-import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -55,7 +54,7 @@ public class LoginPage extends JFrame {
 		accountField = new JTextField();
 		accountField.setBounds(90, 60, 114, 20);
 		contentPanel.add(accountField);
-		
+
 		passwordField = new JPasswordField();
 		passwordField.setBounds(90, 90, 114, 20);
 		contentPanel.add(passwordField);
@@ -63,8 +62,11 @@ public class LoginPage extends JFrame {
 		JButton loginButton = new JButton("\u767B\u9646");
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				hintLabel.setText("µÇÂ½ÖÐ...");
 				Main m = Main.getMain();
-				m.login(serverField.getText(), accountField.getText(), passwordField.getPassword());
+				if(!m.login(serverField.getText(), accountField.getText(), passwordField.getPassword())) {
+					hintLabel.setText("µÇÂ½Ê§°Ü£¬ÇëÖØÊÔ¡£");
+				}
 			}
 		});
 		loginButton.setBounds(87, 136, 60, 20);
