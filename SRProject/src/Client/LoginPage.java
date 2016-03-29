@@ -22,11 +22,15 @@ public class LoginPage extends JFrame {
 	private JTextField accountField;
 	private JPasswordField passwordField;
 	private JTextField serverField;
+	public LoginPage _lp;
+	
 
 	/**
 	 * Create the frame.
 	 */
 	public LoginPage() {
+		_lp = this;
+		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 250, 250);
 		contentPanel = new JPanel();
@@ -68,9 +72,10 @@ public class LoginPage extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				hintLabel.setText("µÇÂ½ÖÐ...");
 				Main m = Main.getMain();
-				if(!m.login(serverField.getText(), accountField.getText(), passwordField.getPassword())) {
+				String password = String.valueOf(passwordField.getPassword());
+				if(!m.login(serverField.getText(), accountField.getText(), password)) {
 					hintLabel.setText("µÇÂ½Ê§°Ü£¬ÇëÖØÊÔ¡£");
-				}
+				} else _lp.dispose();
 			}
 		});
 		loginButton.setBounds(87, 136, 60, 20);

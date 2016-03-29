@@ -7,9 +7,7 @@ public class Main {
 
 	private static Main _m;
 	private Main() {}
-	
-	private static LoginPage _lp;
-	public int _serverPort;
+
 	public String _serverIP;
 	public String _id;
 	
@@ -25,59 +23,53 @@ public class Main {
 		
 		
 		try {
-			_lp = new LoginPage();
-			_lp.setVisible(true);
+			LoginPage lp = new LoginPage();
+			lp.setVisible(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public Boolean login(String serverAddress, String id, char[] password) {
+	public Boolean login(String serverAddress, String id, String password) {
 		try {
 			Socket s = new Socket(serverAddress, 9000);
 			
 			OutputStream os = s.getOutputStream();
-			PrintWriter writer = new PrintWriter(os);
+			PrintWriter writer = new PrintWriter(os,true);
 
 			InputStream is = s.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-			writer.write(id + ";;;");
-			writer.write(password);
+			writer.write(id + ";;;" + password + "\n");
 			writer.flush();
-			s.shutdownOutput();
 
-			String reply = null;
-			while (!((reply = reader.readLine()) == null)) {
+			String reply = reader.readLine();
+			
+			if (reply.equals("accept")) {
 				
-				reader.close();
-				is.close();
-				writer.close();
-				os.close();
-				s.close();
-				
-				if (reply == "error") return false;
-				
-				_lp.dispose();
-				_serverPort = Integer.parseInt(reply); //登陆成功后，服务端返回后续使用的端口号
 				_serverIP = serverAddress;
 				_id = id;
 				
-				//TODO 此处应使用上述参数建立socket连接用于message收发
-				
-				openMessagePage();
+				openMessagePage(s, writer, reader);
 				
 				return true;
 			}
+
+			writer.close();
+			reader.close();
+			is.close();
+			os.close();
+			s.close();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
 	}
 	
-	private void openMessagePage() {
+	private void openMessagePage(Socket s, PrintWriter w, BufferedReader r) {
 		try {
-			MessagePage frame = new MessagePage();
+			MessagePage frame = new MessagePage(s, w, r);
 			frame.setVisible(true);
 		} catch (Exception e) {
 			e.printStackTrace();
