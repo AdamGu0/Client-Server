@@ -66,13 +66,13 @@ public class LoginPage extends JFrame {
 		JButton loginButton = new JButton("\u767B\u9646");
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				hintLabel.setText("ï¿½ï¿½Â½ï¿½ï¿½...");
+				hintLabel.setText("µÇÂ½ÖÐ...");
 				Main m = Main.getMain();
                                 String username = accountField.getText();
                                 char[] pass = passwordField.getPassword();
                                 String password = String.copyValueOf(pass);
-				if(validate_login(username,password)) {
-					hintLabel.setText("ï¿½ï¿½Â½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½");
+				if(!validate_login(username,password)) {
+					hintLabel.setText("µÇÂ½Ê§°Ü£¬ÇëÖØÊÔ¡£");
 				}
 			}
 		});
