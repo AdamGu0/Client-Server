@@ -68,37 +68,14 @@ public class LoginPage extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				hintLabel.setText("µÇÂ½ÖÐ...");
 				Main m = Main.getMain();
-                                String username = accountField.getText();
-                                char[] pass = passwordField.getPassword();
-                                String password = String.copyValueOf(pass);
-				if(!validate_login(username,password)) {
+				if(!m.login(serverField.getText(), accountField.getText(), passwordField.getPassword())) {
 					hintLabel.setText("µÇÂ½Ê§°Ü£¬ÇëÖØÊÔ¡£");
 				}
 			}
 		});
 		loginButton.setBounds(87, 136, 60, 20);
 		contentPanel.add(loginButton);
-		
+		}
 
-	}
-        private boolean validate_login(String username,String password) {
-   try{           
-       Class.forName("com.mysql.jdbc.Driver");  // MySQL database connection
-       Connection conn;     
-       conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/USER?" + "user=root&password=since1997");
-       PreparedStatement pst = conn.prepareStatement("Select * from user where username=? and password=?");
-       pst.setString(1, username); 
-       pst.setString(2, password);
-       ResultSet rs = pst.executeQuery();                        
-       if(rs.next())            
-           return true;    
-       else
-           return false;            
-   }
-   catch(Exception e){
-       e.printStackTrace();
-       return false;
-   }       
-}
 }
 

@@ -1,8 +1,6 @@
 package Server;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -10,9 +8,11 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.awt.event.ActionEvent;
-import javax.swing.BoxLayout;
-import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
@@ -85,13 +85,20 @@ public class testServer extends JFrame {
 			String info = null;
 			while (!((info = br.readLine()) == null)) {
 				logLabel.setText("我是服务器，用户信息为：" + info);
+				   // 响应信息
+				String reply;
+				if(validateUser(info)) {
+					reply = openNewConnection();//详见函数内的说明
 				}
+				else reply = "error";
+				pw.write(reply);
+				pw.flush();
+				logLabel.setText("reply");
+				
+				info = null;
+			}
 
-			   // 响应信息
-			String reply = "9001";
-			pw.write(reply);
-			pw.flush();
-			logLabel.setText("回复端口号");
+
 			   // 关闭流
 			pw.close();
 			os.close();
@@ -103,4 +110,46 @@ public class testServer extends JFrame {
 			e.printStackTrace();
 		}
 	}
+
+	private boolean validateUser(String userInfo) {
+		String[] userInfos = userInfo.split(";;;");
+		String username = userInfos[0];
+		String password = userInfos[1];
+		
+		//TODO:此处应验证user是否重复
+		
+		return validateLogin(username, password);
+	}
+	
+	private boolean validateLogin(String username, String password) {
+		
+		return true; //测试时 跳过登陆验证 直接返回true
+		/*
+		try{
+			
+			Class.forName("com.mysql.jdbc.Driver");  // MySQL database connection
+			Connection conn;
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/USER?" + "user=root&password=since1997");
+			PreparedStatement pst = conn.prepareStatement("Select * from user where username=? and password=?");
+			pst.setString(1, username);
+			pst.setString(2, password);
+			ResultSet rs = pst.executeQuery();
+			if(rs.next())
+				return true;
+			else
+				return false;
+			}
+		catch(Exception e){
+			e.printStackTrace();
+			return false;
+		}
+		*/
+	}
+
+	private String openNewConnection() {
+		//TODO: 此处应新建线程、并在新端口建立socket用于message收发，并返回端口号
+		
+		return "9001";
+	}
+	
 }

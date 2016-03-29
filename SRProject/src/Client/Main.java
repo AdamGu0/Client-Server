@@ -42,7 +42,7 @@ public class Main {
 			InputStream is = s.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-			writer.write("id:" + id + "; password:");
+			writer.write(id + ";;;");
 			writer.write(password);
 			writer.flush();
 			s.shutdownOutput();
@@ -62,7 +62,9 @@ public class Main {
 				_serverPort = Integer.parseInt(reply); //登陆成功后，服务端返回后续使用的端口号
 				_serverIP = serverAddress;
 				_id = id;
-				//TODO 建立连接
+				
+				//TODO 此处应使用上述参数建立socket连接用于message收发
+				
 				openMessagePage();
 				
 				return true;
