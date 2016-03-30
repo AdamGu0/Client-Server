@@ -55,7 +55,7 @@ public class MessagePage extends JFrame {
 		JLabel idLabel = new JLabel("id");
 		idLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		panel.add(idLabel);
-		idLabel.setText("用户名:" + m._id + "服务器:" + m._serverIP);
+		idLabel.setText("用户名:" + m._id + " 服务器:" + m._serverIP);
 		
 		JButton logoutButton = new JButton("\u767B\u51FA");
 		logoutButton.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -83,6 +83,7 @@ public class MessagePage extends JFrame {
 	}
 
 	private void sendMessage(String m) {
+		messageArea.setText(messageArea.getText() + "\t\t\t" + m + "\n");
 		writer.println(m);
 		writer.flush();
 	}
