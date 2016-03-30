@@ -58,7 +58,7 @@ public class testServer extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		Thread myThread = new Thread(new Runnable(){
+		final Thread myThread = new Thread(new Runnable(){
 
 			@Override
 			public void run() {
@@ -67,7 +67,7 @@ public class testServer extends JFrame {
 			}}
 		);
 		
-		JButton btnRun = new JButton("run");
+		final JButton btnRun = new JButton("run");
 		btnRun.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {

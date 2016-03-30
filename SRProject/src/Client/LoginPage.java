@@ -51,7 +51,7 @@ public class LoginPage extends JFrame {
 		passwordLabel.setBounds(30, 90, 60, 20);
 		contentPanel.add(passwordLabel);
 		
-		JLabel hintLabel = new JLabel("");
+		final JLabel hintLabel = new JLabel("");
 		hintLabel.setBounds(30, 166, 174, 20);
 		contentPanel.add(hintLabel);
 		
