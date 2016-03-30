@@ -16,16 +16,18 @@ import javax.swing.SwingConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 public class MessagePage extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField messageField;
+	public JTextArea messageArea;
 	
-	private Socket socket;
+	public Socket socket;
 	private PrintWriter writer;
-	private BufferedReader reader;
+	public BufferedReader reader;
 	/**
 	 * Create the frame.
 	 */
@@ -43,7 +45,8 @@ public class MessagePage extends JFrame {
 		
 		Main m = Main.getMain();
 		
-		JTextArea messageArea = new JTextArea();
+		messageArea = new JTextArea();
+		messageArea.setEditable(false);
 		contentPane.add(messageArea, BorderLayout.CENTER);
 		
 		JPanel panel = new JPanel();
@@ -62,7 +65,7 @@ public class MessagePage extends JFrame {
 		contentPane.add(panel_1, BorderLayout.SOUTH);
 		
 		messageField = new JTextField();
-		messageField.setColumns(30);
+		messageField.setColumns(20);
 		panel_1.add(messageField);
 		
 		JButton sendButton = new JButton("\u53D1\u9001");
@@ -76,11 +79,31 @@ public class MessagePage extends JFrame {
 		});
 		sendButton.setHorizontalAlignment(SwingConstants.TRAILING);
 		panel_1.add(sendButton);
+		new ReadThread();
 	}
 
 	private void sendMessage(String m) {
 		writer.println(m);
 		writer.flush();
+	}
+	
+	class ReadThread extends Thread {
+		
+		public ReadThread() {
+			start();
+		}
+		
+		public void run() {
+			try {
+				while (true) {
+					String line = reader.readLine();
+					messageArea.setText(messageArea.getText() + line + "\n");
+				}
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

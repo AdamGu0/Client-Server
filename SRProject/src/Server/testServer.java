@@ -5,6 +5,9 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import Server.testServer.MessageThread;
+
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -23,8 +26,8 @@ public class testServer extends JFrame {
 
 	private JPanel contentPane;
 	public JLabel logLabel;
-	 Vector<String> userList;
-	
+	private Vector<String> userList;
+	private Vector<MessageThread> messageThreads; 
 	/**
 	 * Launch the application.
 	 */
@@ -46,6 +49,7 @@ public class testServer extends JFrame {
 	 */
 	public testServer() {
 		userList = new Vector<String>();
+		messageThreads = new Vector<MessageThread>();
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -105,12 +109,15 @@ public class testServer extends JFrame {
 				
 				logLabel.setText("用户信息为：" + info);
 				
+				String[] userInfos = info.split(";;;");
+				String username = userInfos[0];
+				String password = userInfos[1];
 				   // 响应信息
-				if(validateUser(info)) {
+				if(validateUser(username, password)) {
 					logLabel.setText("登陆成功");
 					pw.write("accept\n");
 					pw.flush();
-					new MessageThread(socket, pw, br);
+					messageThreads.addElement(new MessageThread(socket, pw, br, username));
 				} else {
 					pw.write("error\n");
 					pw.flush();
@@ -130,10 +137,8 @@ public class testServer extends JFrame {
 		}
 	}
 
-	private boolean validateUser(String userInfo) {
-		String[] userInfos = userInfo.split(";;;");
-		String username = userInfos[0];
-		String password = userInfos[1];
+	private boolean validateUser(String username, String password) {
+
 		
 		if (userList.contains(username)) return false; //查重复
 		if (!validateLogin(username, password)) return false; //验证密码
@@ -167,15 +172,25 @@ public class testServer extends JFrame {
 		*/
 	}
 	
+	public void sendMessages(String id, String message) {
+		Enumeration<MessageThread> e = messageThreads.elements();
+		while (e.hasMoreElements()) {
+			MessageThread t = e.nextElement();
+			t.sendMessage(id, message);
+		}
+	}
+	
 	class MessageThread extends Thread {
 		private Socket client;
 		private BufferedReader reader;
 		private PrintWriter writer;
+		private String _id;
 		
-		public MessageThread(Socket s, PrintWriter w, BufferedReader r) throws IOException {
+		public MessageThread(Socket s, PrintWriter w, BufferedReader r, String id) throws IOException {
 			client = s;
 			writer = w;
 			reader = r;
+			_id = id;
 
 			start();
 		}
@@ -184,13 +199,19 @@ public class testServer extends JFrame {
 			try {
 				while (true) {
 					String line = reader.readLine();
-				
-					logLabel.setText(line);
+					logLabel.setText(_id + ": " + line);
+					sendMessages(_id, line);
 				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+		
+		public void sendMessage(String id, String message) {
+			if (id.equals(_id)) return;
+			writer.write(id + ": " + message + "\n");
+			writer.flush();
 		}
 		
 	}

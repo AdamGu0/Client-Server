@@ -22,6 +22,7 @@ public class LoginPage extends JFrame {
 	private JTextField accountField;
 	private JPasswordField passwordField;
 	private JTextField serverField;
+	
 	public LoginPage _lp;
 	
 
@@ -75,7 +76,9 @@ public class LoginPage extends JFrame {
 				String password = String.valueOf(passwordField.getPassword());
 				if(!m.login(serverField.getText(), accountField.getText(), password)) {
 					hintLabel.setText("µ«¬Ω ß∞‹£¨«Î÷ÿ ‘°£");
-				} else _lp.dispose();
+				} else {
+					_lp.dispose();
+				}
 			}
 		});
 		loginButton.setBounds(87, 136, 60, 20);
