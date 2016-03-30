@@ -55,7 +55,7 @@ public class MessagePage extends JFrame {
 		JLabel idLabel = new JLabel("id");
 		idLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		panel.add(idLabel);
-		idLabel.setText("ÓÃ»§Ãû:" + m._id + " ·şÎñÆ÷:" + m._serverIP);
+		idLabel.setText("ç”¨æˆ·å:" + m._id + "æœåŠ¡å™¨:" + m._serverIP);
 		
 		JButton logoutButton = new JButton("\u767B\u51FA");
 		logoutButton.setHorizontalAlignment(SwingConstants.RIGHT);

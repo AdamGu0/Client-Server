@@ -71,11 +71,11 @@ public class LoginPage extends JFrame {
 		JButton loginButton = new JButton("\u767B\u9646");
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				hintLabel.setText("µÇÂ½ÖĞ...");
+				hintLabel.setText("ç™»é™†ä¸­...");
 				Main m = Main.getMain();
 				String password = String.valueOf(passwordField.getPassword());
 				if(!m.login(serverField.getText(), accountField.getText(), password)) {
-					hintLabel.setText("µÇÂ½Ê§°Ü£¬ÇëÖØÊÔ¡£");
+					hintLabel.setText("ç™»é™†å¤±è´¥ï¼Œè¯·é‡è¯•ã€‚");
 				} else {
 					_lp.dispose();
 				}
