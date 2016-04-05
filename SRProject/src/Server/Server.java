@@ -6,27 +6,21 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import Server.testServer.MessageThread;
-
 import javax.swing.JButton;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class testServer extends JFrame {
+public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
 	private Vector<String> userList;
-	private Vector<MessageThread> messageThreads; 
+	private Vector<MessageThread> messageThreads;
+	public int validLoginCount;
+	public int invalidLoginCount;
 	/**
 	 * Launch the application.
 	 */
@@ -34,7 +28,7 @@ public class testServer extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					testServer frame = new testServer();
+					Server frame = new Server();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -46,9 +40,11 @@ public class testServer extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public testServer() {
+	public Server() {
 		userList = new Vector<String>();
 		messageThreads = new Vector<MessageThread>();
+		validLoginCount = 0;
+		invalidLoginCount = 0;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -109,15 +105,25 @@ public class testServer extends JFrame {
 				logLabel.setText("用户信息为：" + info);
 				
 				String[] userInfos = info.split(";;;");
+				if (userInfos.length != 2) {
+					   // 非法连接 关闭流
+					pw.close();
+					br.close();
+					os.close();
+					is.close();
+					socket.close();
+				}
 				String username = userInfos[0];
 				String password = userInfos[1];
 				   // 响应信息
 				if(validateUser(username, password)) {
+					validLoginCount++;
 					logLabel.setText("登陆成功");
 					pw.write("accept\n");
 					pw.flush();
 					messageThreads.addElement(new MessageThread(socket, pw, br, username));
 				} else {
+					invalidLoginCount++;
 					pw.write("error\n");
 					pw.flush();
 					

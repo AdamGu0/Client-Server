@@ -12,7 +12,7 @@ public class ServerTest {
 	}
 
 	@Test
-	public void testTestServer() {
+	public void testServer() {
 		fail("Not yet implemented");
 	}
 

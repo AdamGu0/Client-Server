@@ -6,10 +6,15 @@ import java.net.Socket;
 public class Main {
 
 	private static Main _m;
-	private Main() {}
+	private Main() {
+		failCount = 0;
+		successCount = 0;
+	}
 
 	public String _serverIP;
 	public String _id;
+	public int failCount;
+	public int successCount;
 	
 	public static Main getMain() {
 		if ( _m == null) _m = new Main();
@@ -20,8 +25,6 @@ public class Main {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		
-		
 		try {
 			LoginPage lp = new LoginPage();
 			lp.setVisible(true);
@@ -51,7 +54,7 @@ public class Main {
 				_id = id;
 				
 				openMessagePage(s, writer, reader);
-				
+				successCount++;
 				return true;
 			}
 
@@ -64,6 +67,7 @@ public class Main {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		failCount++;
 		return false;
 	}
 	
