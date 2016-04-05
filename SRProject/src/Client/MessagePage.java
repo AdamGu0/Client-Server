@@ -28,6 +28,8 @@ public class MessagePage extends JFrame {
 	public Socket socket;
 	private PrintWriter writer;
 	public BufferedReader reader;
+	public int receiveCount;
+	public int sendCount;
 	/**
 	 * Create the frame.
 	 */
@@ -35,6 +37,8 @@ public class MessagePage extends JFrame {
 		socket = s;
 		writer = w;
 		reader = r;
+		receiveCount = 0;
+		sendCount = 0;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 412, 300);
@@ -79,6 +83,7 @@ public class MessagePage extends JFrame {
 		});
 		sendButton.setHorizontalAlignment(SwingConstants.TRAILING);
 		panel_1.add(sendButton);
+		
 		new ReadThread();
 	}
 
@@ -86,6 +91,7 @@ public class MessagePage extends JFrame {
 		messageArea.setText(messageArea.getText() + "\t\t\t" + m + "\n");
 		writer.println(m);
 		writer.flush();
+		sendCount++;
 	}
 	
 	class ReadThread extends Thread {
@@ -98,6 +104,7 @@ public class MessagePage extends JFrame {
 			try {
 				while (true) {
 					String line = reader.readLine();
+					receiveCount++;
 					messageArea.setText(messageArea.getText() + line + "\n");
 				}
 				

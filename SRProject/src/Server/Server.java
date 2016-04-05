@@ -21,6 +21,8 @@ public class Server extends JFrame {
 	private Vector<MessageThread> messageThreads;
 	public int validLoginCount;
 	public int invalidLoginCount;
+	public int receiveCount;
+	public int forwardCount;
 	/**
 	 * Launch the application.
 	 */
@@ -45,6 +47,8 @@ public class Server extends JFrame {
 		messageThreads = new Vector<MessageThread>();
 		validLoginCount = 0;
 		invalidLoginCount = 0;
+		receiveCount = 0;
+		forwardCount = 0;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -181,7 +185,7 @@ public class Server extends JFrame {
 		Enumeration<MessageThread> e = messageThreads.elements();
 		while (e.hasMoreElements()) {
 			MessageThread t = e.nextElement();
-			t.sendMessage(id, message);
+			t.forwardMessage(id, message);
 		}
 	}
 	
@@ -204,6 +208,7 @@ public class Server extends JFrame {
 			try {
 				while (true) {
 					String line = reader.readLine();
+					count(1);
 					logLabel.setText(_id + ": " + line);
 					sendMessages(_id, line);
 				}
@@ -213,10 +218,16 @@ public class Server extends JFrame {
 			}
 		}
 		
-		public void sendMessage(String id, String message) {
+		public void forwardMessage(String id, String message) {
 			if (id.equals(_id)) return;
 			writer.write(id + ": " + message + "\n");
 			writer.flush();
+			count(2);
+		}
+		
+		private synchronized void count(int kind) {
+			if (kind == 1) receiveCount++;
+			if (kind == 2) forwardCount++;
 		}
 		
 	}
