@@ -16,6 +16,8 @@ public class License {
 	private int capacityPerSecond;
 
 	public License(int _capacityTotal, int _capacityPerSecond) {
+		if (_capacityTotal <= 0 || _capacityPerSecond <= 0)
+			throw new RuntimeException("wrong parameter when crate Lincense.");
 		capacity = _capacityTotal;
 		capacityPerSecond = _capacityPerSecond;
 		countMap = new ConcurrentHashMap<String, IdCount>(42);
@@ -26,6 +28,8 @@ public class License {
 	 * _idCapacity为预期的id总数。
 	 */
 	public License(int _capacityTotal, int _capacityPerSecond, int _idCapacity) {
+		if (_capacityTotal <= 0 || _capacityPerSecond <= 0 || _idCapacity <= 0)
+			throw new RuntimeException("wrong parameter when crate Lincense.");
 		capacity = _capacityTotal;
 		capacityPerSecond = _capacityPerSecond;
 		countMap = new ConcurrentHashMap<String, IdCount>(_idCapacity * 2);

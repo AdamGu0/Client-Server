@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Locale;
 
 public class LoginPage extends JFrame {
 
@@ -22,15 +23,11 @@ public class LoginPage extends JFrame {
 	private JTextField accountField;
 	private JPasswordField passwordField;
 	private JTextField serverField;
-	
-	public LoginPage _lp;
-	
 
 	/**
 	 * Create the frame.
 	 */
 	public LoginPage() {
-		_lp = this;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 250, 250);
@@ -66,18 +63,28 @@ public class LoginPage extends JFrame {
 
 		passwordField = new JPasswordField();
 		passwordField.setBounds(90, 90, 114, 20);
+		passwordField.enableInputMethods(true);
 		contentPanel.add(passwordField);
 		
 		JButton loginButton = new JButton("\u767B\u9646");
 		loginButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				String id = accountField.getText();
+				String password = String.valueOf(passwordField.getPassword());
+				if ( id.isEmpty() ) {
+					hintLabel.setText("请输入用户名。");
+					return;
+				}
+				if ( password.isEmpty() ) {
+					hintLabel.setText("请输入密码。");
+					return;
+				}
 				hintLabel.setText("登陆中...");
 				Main m = Main.getMain();
-				String password = String.valueOf(passwordField.getPassword());
-				if(!m.login(serverField.getText(), accountField.getText(), password)) {
+				if(!m.login(serverField.getText(), id, password)) {
 					hintLabel.setText("登陆失败，请重试。");
 				} else {
-					_lp.dispose();
+					dispose();
 				}
 			}
 		});

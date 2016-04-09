@@ -11,8 +11,8 @@ public class Main {
 		successCount = 0;
 	}
 
-	public String _serverIP;
-	public String _id;
+	public String serverIP;
+	public String id;
 	public int failCount;
 	public int successCount;
 	
@@ -33,7 +33,7 @@ public class Main {
 		}
 	}
 	
-	public Boolean login(String serverAddress, String id, String password) {
+	public Boolean login(String serverAddress, String _id, String password) {
 		try {
 			Socket s = new Socket(serverAddress, 9000);
 			
@@ -43,15 +43,15 @@ public class Main {
 			InputStream is = s.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-			writer.write(id + ";;;" + password + "\n");
+			writer.write(_id + ";;;" + password + "\n");
 			writer.flush();
 
 			String reply = reader.readLine();
 			
 			if (reply.equals("accept")) {
 				
-				_serverIP = serverAddress;
-				_id = id;
+				serverIP = serverAddress;
+				id = _id;
 				
 				openMessagePage(s, writer, reader);
 				successCount++;

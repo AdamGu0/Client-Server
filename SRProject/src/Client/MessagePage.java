@@ -18,12 +18,18 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MessagePage extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField messageField;
-	public JTextArea messageArea;
+	private JTextArea messageArea;
 	
 	public Socket socket;
 	private PrintWriter writer;
@@ -34,13 +40,19 @@ public class MessagePage extends JFrame {
 	 * Create the frame.
 	 */
 	public MessagePage(Socket s, PrintWriter w, BufferedReader r) {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				logout();
+			}
+		});
 		socket = s;
 		writer = w;
 		reader = r;
 		receiveCount = 0;
 		sendCount = 0;
 		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(100, 100, 412, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -49,9 +61,11 @@ public class MessagePage extends JFrame {
 		
 		Main m = Main.getMain();
 		
+		JScrollPane scrollPane = new JScrollPane();
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		
 		messageArea = new JTextArea();
-		messageArea.setEditable(false);
-		contentPane.add(messageArea, BorderLayout.CENTER);
+		scrollPane.setViewportView(messageArea);
 		
 		JPanel panel = new JPanel();
 		contentPane.add(panel, BorderLayout.NORTH);
@@ -59,9 +73,14 @@ public class MessagePage extends JFrame {
 		JLabel idLabel = new JLabel("id");
 		idLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		panel.add(idLabel);
-		idLabel.setText("用户名:" + m._id + " 服务器:" + m._serverIP);
+		idLabel.setText("用户名:" + m.id + " 服务器:" + m.serverIP);
 		
 		JButton logoutButton = new JButton("\u767B\u51FA");
+		logoutButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				logout();
+			}
+		});
 		logoutButton.setHorizontalAlignment(SwingConstants.RIGHT);
 		panel.add(logoutButton);
 		
@@ -69,15 +88,24 @@ public class MessagePage extends JFrame {
 		contentPane.add(panel_1, BorderLayout.SOUTH);
 		
 		messageField = new JTextField();
+		messageField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if ( e.getKeyCode() == KeyEvent.VK_ENTER) {
+					String message = messageField.getText();
+					if ( !message.isEmpty() ) sendMessage(message);
+					messageField.setText("");
+				}
+			}
+		});
 		messageField.setColumns(20);
 		panel_1.add(messageField);
 		
 		JButton sendButton = new JButton("\u53D1\u9001");
-		sendButton.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+		sendButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
 				String message = messageField.getText();
-				if (!message.isEmpty()) sendMessage(message);
+				if ( !message.isEmpty() ) sendMessage(message);
 				messageField.setText("");
 			}
 		});
@@ -87,11 +115,32 @@ public class MessagePage extends JFrame {
 		new ReadThread();
 	}
 
+	private void logout() {
+		try {
+			writer.println("LOGOUT");
+			writer.flush();
+			writer.close();
+			reader.close();
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		dispose();
+		LoginPage lp = new LoginPage();
+		lp.setVisible(true);
+	}
+
 	private void sendMessage(String m) {
-		messageArea.setText(messageArea.getText() + "\t\t\t" + m + "\n");
+		showMessage("\t\t\t" + m);
 		writer.println(m);
 		writer.flush();
 		sendCount++;
+	}
+	
+	private void showMessage(String m) {
+		messageArea.setText(messageArea.getText() + m + "\n");
+		messageArea.setCaretPosition(messageArea.getText().length());//使滚动条到最底部
 	}
 	
 	class ReadThread extends Thread {
@@ -104,12 +153,17 @@ public class MessagePage extends JFrame {
 			try {
 				while (true) {
 					String line = reader.readLine();
+					if (line == null) {
+						showMessage("连接已断开，请重新登录。");
+						return;
+					}
 					receiveCount++;
-					messageArea.setText(messageArea.getText() + line + "\n");
+					showMessage(line);
 				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+				showMessage("连接已断开，请重新登录。");
 			}
 		}
 	}

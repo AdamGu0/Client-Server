@@ -14,6 +14,10 @@ import javax.swing.SwingConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import SR.AdamGu0.License;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
@@ -21,8 +25,9 @@ public class Server extends JFrame {
 	private Vector<MessageThread> messageThreads;
 	public int validLoginCount;
 	public int invalidLoginCount;
-	public int receiveCount;
 	public int forwardCount;
+	private License license;
+	private ServerSocket serverSocket;
 	/**
 	 * Launch the application.
 	 */
@@ -43,12 +48,18 @@ public class Server extends JFrame {
 	 * Create the frame.
 	 */
 	public Server() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				closeServer();
+			}
+		});
 		userList = new Vector<String>();
 		messageThreads = new Vector<MessageThread>();
 		validLoginCount = 0;
 		invalidLoginCount = 0;
-		receiveCount = 0;
 		forwardCount = 0;
+		license = new License(100, 2); // TODO read parameters from file @RebertRen
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -61,12 +72,11 @@ public class Server extends JFrame {
 
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
 				runServer();
 			}}
 		);
 		
-		final JButton btnRun = new JButton("run");
+		final JButton btnRun = new JButton("启动");
 		btnRun.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
@@ -78,17 +88,36 @@ public class Server extends JFrame {
 		btnRun.setBounds(10, 10, 93, 23);
 		contentPane.add(btnRun);
 		
-		logLabel = new JLabel("New label");
+		logLabel = new JLabel("服务器未启动");
 		logLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		logLabel.setBounds(10, 44, 414, 23);
 		contentPane.add(logLabel);
 
 	}
 	
+
+
+	private void closeServer() {
+		try {
+			closeThreads();
+			serverSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void closeThreads() throws IOException {
+		Enumeration<MessageThread> e = messageThreads.elements();
+		while (e.hasMoreElements()) {
+			MessageThread t = e.nextElement();
+			t.close();
+		}
+	}
+
 	private void runServer() {
 		try {
 			   // 建立一个服务器绑定指定端口Socket(ServerSocket)并开始监听
-			ServerSocket serverSocket = new ServerSocket(9000);
+			serverSocket = new ServerSocket(9000);
 
 			while(true) {
 				   // 使用accept()方法阻塞等待监听，获得新的连接
@@ -106,8 +135,6 @@ public class Server extends JFrame {
 				   // 读取用户输入信息
 				String info = br.readLine();
 				
-				logLabel.setText("用户信息为：" + info);
-				
 				String[] userInfos = info.split(";;;");
 				if (userInfos.length != 2) {
 					   // 非法连接 关闭流
@@ -122,12 +149,14 @@ public class Server extends JFrame {
 				   // 响应信息
 				if(validateUser(username, password)) {
 					validLoginCount++;
-					logLabel.setText("登陆成功");
+					logLabel.setText(username + "登陆成功");
 					pw.write("accept\n");
 					pw.flush();
+					license.newId(username);
 					messageThreads.addElement(new MessageThread(socket, pw, br, username));
 				} else {
 					invalidLoginCount++;
+					logLabel.setText(username + "登陆失败");
 					pw.write("error\n");
 					pw.flush();
 					
@@ -181,7 +210,7 @@ public class Server extends JFrame {
 		*/
 	}
 	
-	public void sendMessages(String id, String message) {
+	private void sendMessages(String id, String message) {
 		Enumeration<MessageThread> e = messageThreads.elements();
 		while (e.hasMoreElements()) {
 			MessageThread t = e.nextElement();
@@ -189,17 +218,21 @@ public class Server extends JFrame {
 		}
 	}
 	
+	private synchronized void forwardCount() {
+		forwardCount++;
+	}
+	
 	class MessageThread extends Thread {
 		private Socket client;
 		private BufferedReader reader;
 		private PrintWriter writer;
-		private String _id;
+		private String id;
 		
-		public MessageThread(Socket s, PrintWriter w, BufferedReader r, String id) throws IOException {
+		public MessageThread(Socket s, PrintWriter w, BufferedReader r, String _id) throws IOException {
 			client = s;
 			writer = w;
 			reader = r;
-			_id = id;
+			id = _id;
 
 			start();
 		}
@@ -208,30 +241,63 @@ public class Server extends JFrame {
 			try {
 				while (true) {
 					String line = reader.readLine();
-					count(1);
-					logLabel.setText(_id + ": " + line);
-					sendMessages(_id, line);
+					
+					if ( line.equals("LOGOUT")) {
+						logout();
+						return;
+					}
+					
+					if ( !license.count(id) ) {
+						sendMessage("服务器：您已超过可发送的消息上限，即将断开连接。");
+						logout();
+						return;
+					}
+					if ( !license.allowInSecond(id) ) {
+						sendMessage("服务器：您发送消息太过频繁，请稍后再试。");
+						continue;
+					}
+					
+					logLabel.setText(id + ": " + line);
+					sendMessages(id, line);
 				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+				logout();
 			}
 		}
 		
-		public void forwardMessage(String id, String message) {
-			if (id.equals(_id)) return;
-			writer.write(id + ": " + message + "\n");
-			writer.flush();
-			count(2);
+		private void logout() {
+			try {
+				writer.close();
+				reader.close();
+				client.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			logLabel.setText(id + " 已登出");
+			messageThreads.remove(this);
+			userList.remove(id);
+			license.removeId(id);
 		}
 		
-		private synchronized void count(int kind) {
-			if (kind == 1) receiveCount++;
-			if (kind == 2) forwardCount++;
+		protected void close() throws IOException {
+			writer.close();
+			reader.close();
+			client.close();
+		}
+
+		public void forwardMessage(String _id, String message) {
+			if (_id.equals(id)) return;
+			sendMessage(_id + ": " + message);
+			forwardCount();
+		}
+		
+		public void sendMessage(String message) {
+			writer.write(message + "\n");
+			writer.flush();
 		}
 		
 	}
-
-
-	
 }
