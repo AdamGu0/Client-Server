@@ -3,16 +3,14 @@
  */
 package SR.AdamGu0;
 
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.function.UnaryOperator;
 
 /**
  * @author AdamGu0
  *
  */
 class IdCount {
-	private String id;
+	//private String id;
 	private int capacity;
 	private int capacityPerSecond;
 	
@@ -20,7 +18,7 @@ class IdCount {
 	private LinkedList<Long> countTimestamps;
 	
 	protected IdCount(String _id, int _capacity, int _capacityPerSecond) {
-		id = _id;
+		//id = _id;
 		capacity = _capacity;
 		capacityPerSecond = _capacityPerSecond;
 		

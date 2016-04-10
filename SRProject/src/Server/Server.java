@@ -21,8 +21,8 @@ import java.awt.event.WindowEvent;
 public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
-	private Vector<String> userList;
-	private Vector<MessageThread> messageThreads;
+	private ArrayList<String> userList;
+	private ArrayList<MessageThread> messageThreads;
 	public int validLoginCount;
 	public int invalidLoginCount;
 	public int forwardCount;
@@ -54,8 +54,8 @@ public class Server extends JFrame {
 				closeServer();
 			}
 		});
-		userList = new Vector<String>();
-		messageThreads = new Vector<MessageThread>();
+		userList = new ArrayList<String>();
+		messageThreads = new ArrayList<MessageThread>();
 		validLoginCount = 0;
 		invalidLoginCount = 0;
 		forwardCount = 0;
@@ -107,11 +107,7 @@ public class Server extends JFrame {
 	}
 
 	private void closeThreads() throws IOException {
-		Enumeration<MessageThread> e = messageThreads.elements();
-		while (e.hasMoreElements()) {
-			MessageThread t = e.nextElement();
-			t.close();
-		}
+		synchronized(messageThreads) { for (MessageThread t : messageThreads) t.close(); }
 	}
 
 	private void runServer() {
@@ -153,7 +149,7 @@ public class Server extends JFrame {
 					pw.write("accept\n");
 					pw.flush();
 					license.newId(username);
-					messageThreads.addElement(new MessageThread(socket, pw, br, username));
+					synchronized(messageThreads) { messageThreads.add(new MessageThread(socket, pw, br, username)); }
 				} else {
 					invalidLoginCount++;
 					logLabel.setText(username + "登陆失败");
@@ -176,12 +172,9 @@ public class Server extends JFrame {
 	}
 
 	private boolean validateUser(String username, String password) {
-
-		
-		if (userList.contains(username)) return false; //查重复
+		synchronized(userList) { if (userList.contains(username)) return false; }//查重复
 		if (!validateLogin(username, password)) return false; //验证密码
-		
-		userList.addElement(username);
+		synchronized(userList) { userList.add(username); }
 		return true;
 	}
 	
@@ -211,11 +204,7 @@ public class Server extends JFrame {
 	}
 	
 	private void sendMessages(String id, String message) {
-		Enumeration<MessageThread> e = messageThreads.elements();
-		while (e.hasMoreElements()) {
-			MessageThread t = e.nextElement();
-			t.forwardMessage(id, message);
-		}
+		synchronized(messageThreads) { for (MessageThread t : messageThreads) t.forwardMessage(id, message); }
 	}
 	
 	private synchronized void forwardCount() {
@@ -277,8 +266,8 @@ public class Server extends JFrame {
 				e.printStackTrace();
 			}
 			logLabel.setText(id + " 已登出");
-			messageThreads.remove(this);
-			userList.remove(id);
+			synchronized(messageThreads) { messageThreads.remove(this); }
+			synchronized(userList) { userList.remove(id); }
 			license.removeId(id);
 		}
 		
