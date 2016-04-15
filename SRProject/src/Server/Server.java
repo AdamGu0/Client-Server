@@ -14,9 +14,10 @@ import javax.swing.SwingConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import SR.AdamGu0.License;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import reuse.license.*;
 
 public class Server extends JFrame {
 	private JPanel contentPane;
@@ -26,8 +27,10 @@ public class Server extends JFrame {
 	public int validLoginCount;
 	public int invalidLoginCount;
 	public int forwardCount;
-	private License license;
 	private ServerSocket serverSocket;
+	private MultiMaxNumOfMessage totalLicense;
+	private MultiFrequencyRestriction freqLicense;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -59,7 +62,6 @@ public class Server extends JFrame {
 		validLoginCount = 0;
 		invalidLoginCount = 0;
 		forwardCount = 0;
-		license = new License(100, 2); // TODO read parameters from file @RebertRen
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -88,11 +90,21 @@ public class Server extends JFrame {
 		btnRun.setBounds(10, 10, 93, 23);
 		contentPane.add(btnRun);
 		
-		logLabel = new JLabel("服务器未启动");
+		logLabel = new JLabel("服务器");
 		logLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		logLabel.setBounds(10, 44, 414, 23);
 		contentPane.add(logLabel);
 
+		// TODO read parameters from file @RebertRen
+		try {
+			serverSocket = new ServerSocket(9000);
+			logLabel.setText("服务器就绪。");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			logLabel.setText("无法建立服务器。");
+		}
+		totalLicense = new MultiMaxNumOfMessage(100);
+		freqLicense = new MultiFrequencyRestriction(1);
 	}
 	
 
@@ -112,9 +124,6 @@ public class Server extends JFrame {
 
 	private void runServer() {
 		try {
-			   // 建立一个服务器绑定指定端口Socket(ServerSocket)并开始监听
-			serverSocket = new ServerSocket(9000);
-
 			while(true) {
 				   // 使用accept()方法阻塞等待监听，获得新的连接
 				Socket socket = serverSocket.accept();
@@ -148,7 +157,8 @@ public class Server extends JFrame {
 					logLabel.setText(username + "登陆成功");
 					pw.write("accept\n");
 					pw.flush();
-					license.newId(username);
+					totalLicense.addMap(username);
+					freqLicense.addMap(username);
 					synchronized(messageThreads) { messageThreads.add(new MessageThread(socket, pw, br, username)); }
 				} else {
 					invalidLoginCount++;
@@ -236,12 +246,12 @@ public class Server extends JFrame {
 						return;
 					}
 					
-					if ( !license.count(id) ) {
+					if ( !totalLicense.CheckByKey(id) ) {
 						sendMessage("服务器：您已超过可发送的消息上限，即将断开连接。");
 						logout();
 						return;
 					}
-					if ( !license.allowInSecond(id) ) {
+					if ( !freqLicense.CheckByKey(id) ) {
 						sendMessage("服务器：您发送消息太过频繁，请稍后再试。");
 						continue;
 					}
@@ -268,7 +278,9 @@ public class Server extends JFrame {
 			logLabel.setText(id + " 已登出");
 			synchronized(messageThreads) { messageThreads.remove(this); }
 			synchronized(userList) { userList.remove(id); }
-			license.removeId(id);
+
+			totalLicense.deleteMap(id);
+			freqLicense.deleteMap(id);
 		}
 		
 		protected void close() throws IOException {
