@@ -18,15 +18,22 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import reuse.license.*;
+import teamEleven.configController.*;
+
+import org.json.*;
 
 public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
+	public ConfigController configTest;
 	private ArrayList<String> userList;
 	private ArrayList<MessageThread> messageThreads;
 	public int validLoginCount;
 	public int invalidLoginCount;
 	public int forwardCount;
+	public int pNumber;
+	public int tNumber;
+	public int fNumber;
 	private ServerSocket serverSocket;
 	private MultiMaxNumOfMessage totalLicense;
 	private MultiFrequencyRestriction freqLicense;
@@ -62,6 +69,7 @@ public class Server extends JFrame {
 		validLoginCount = 0;
 		invalidLoginCount = 0;
 		forwardCount = 0;
+		pNumber = 0;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -97,7 +105,9 @@ public class Server extends JFrame {
 
 		// TODO read parameters from file @RebertRen
 		try {
-			serverSocket = new ServerSocket(9000);
+		    configTest = new ConfigController("properties.json");
+		    pNumber = configTest.getInt("ServerPortNumber", 9000);
+			serverSocket = new ServerSocket(pNumber);
 			logLabel.setText("服务器就绪。");
 		} catch (IOException e1) {
 			e1.printStackTrace();

@@ -1,7 +1,14 @@
 package Client;
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
+
+import javax.swing.JLabel;
+
+import teamEleven.configController.*;
+
+import org.json.*;
 
 public class Main {
 
@@ -15,6 +22,11 @@ public class Main {
 	public String id;
 	public int failCount;
 	public int successCount;
+	public JLabel logLabel;
+	public ConfigController configTest;
+	public int pNumber;
+	public int tNumber;
+	public int fNumber;
 	
 	public static Main getMain() {
 		if ( _m == null) _m = new Main();
@@ -33,11 +45,13 @@ public class Main {
 		}
 	}
 	
-	public Boolean login(String serverAddress, String _id, String password) {
+	public Boolean login(String serream os = verAddress , String _id, String password) {
 		try {
-			Socket s = new Socket(serverAddress, 9000);
+			configTest = new ConfigController("properties.json");
+			pNumber = configTest.getInt("ServerPortNumber", 9000);
+			Socket s = new Socket(serverAddress, pNumber);
 			
-			OutputStream os = s.getOutputStream();
+			OutputSts.getOutputStream();
 			PrintWriter writer = new PrintWriter(os,true);
 
 			InputStream is = s.getInputStream();
