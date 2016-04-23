@@ -250,7 +250,7 @@ public class Server extends JFrame {
 			try{
 				PrintStream ps = new PrintStream(new FileOutputStream(file));
 				ps.append(line);
-				
+				ps.close();
 			}catch(FileNotFoundException e){
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -258,7 +258,7 @@ public class Server extends JFrame {
 			
 		}
 		
-		public void FileExist(String filepath){
+		public File FileExist(String filepath){
 			File file=new File(filepath);    
 			if(!file.exists())    
 			{    
@@ -268,13 +268,14 @@ public class Server extends JFrame {
 			        // TODO Auto-generated catch block    
 			        e.printStackTrace();    
 			    }    
-			}    
+			}
+			return file;    
 		
 		}
 		
 		public void run() {
 			String filename = "data/fileoutput.txt";
-		    FileExist(filename);
+		    File outputfile = FileExist(filename);
 			try {
 				while (true) {
 					String line = reader.readLine();
@@ -296,12 +297,14 @@ public class Server extends JFrame {
 					
 					logLabel.setText(id + ": " + line);
 					sendMessages(id, line);
+					WriteMessageToFile(outputfile,line);
 				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 				logout();
 			}
+		
 		}
 		
 		private void logout() {
