@@ -231,6 +231,7 @@ public class Server extends JFrame {
 		forwardCount++;
 	}
 	
+	
 	class MessageThread extends Thread {
 		private Socket client;
 		private BufferedReader reader;
@@ -245,8 +246,35 @@ public class Server extends JFrame {
 
 			start();
 		}
+		public void WriteMessageToFile(File file,String line){
+			try{
+				PrintStream ps = new PrintStream(new FileOutputStream(file));
+				ps.append(line);
+				
+			}catch(FileNotFoundException e){
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		public void FileExist(String filepath){
+			File file=new File(filepath);    
+			if(!file.exists())    
+			{    
+			    try {    
+			        file.createNewFile();    
+			    } catch (IOException e) {    
+			        // TODO Auto-generated catch block    
+			        e.printStackTrace();    
+			    }    
+			}    
+		
+		}
 		
 		public void run() {
+			String filename = "data/fileoutput.txt";
+		    FileExist(filename);
 			try {
 				while (true) {
 					String line = reader.readLine();

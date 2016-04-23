@@ -44,9 +44,36 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
+	public void WriteMessageToFile(File file,String line){
+		try{
+			PrintStream ps = new PrintStream(new FileOutputStream(file));
+			ps.append(line);
+			ps.close();
+		}catch(FileNotFoundException e){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
+	public File FileExist(String filepath){
+		File file=new File(filepath);    
+		if(!file.exists())    
+		{    
+		    try {    
+		        file.createNewFile();    
+		    } catch (IOException e) {    
+		        // TODO Auto-generated catch block    
+		        e.printStackTrace();    
+		    }    
+		}
+		return file;    
+	
+	}
 	public Boolean login(String serream os = verAddress , String _id, String password) {
 		try {
+			String filename = "data/Clientfile.txt";
+		    File outputfile = FileExist(filename);
 			configTest = new ConfigController("properties.json");
 			pNumber = configTest.getInt("ServerPortNumber", 9000);
 			Socket s = new Socket(serverAddress, pNumber);
@@ -61,7 +88,7 @@ public class Main {
 			writer.flush();
 
 			String reply = reader.readLine();
-			
+			WriteMessageToFile(outputfile,reply);
 			if (reply.equals("accept")) {
 				
 				serverIP = serverAddress;
