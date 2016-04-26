@@ -125,7 +125,7 @@ public class MessagePage extends JFrame {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		Main.getMain().closeFile();
 		dispose();
 		LoginPage lp = new LoginPage();
 		lp.setVisible(true);
@@ -159,6 +159,7 @@ public class MessagePage extends JFrame {
 					}
 					receiveCount++;
 					showMessage(line);
+					Main.getMain().writeMessageToFile(line + "\n");
 				}
 				
 			} catch (IOException e) {

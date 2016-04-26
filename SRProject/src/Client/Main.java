@@ -13,6 +13,7 @@ import org.json.*;
 public class Main {
 
 	private static Main _m;
+
 	private Main() {
 		failCount = 0;
 		successCount = 0;
@@ -27,12 +28,15 @@ public class Main {
 	public int pNumber;
 	public int tNumber;
 	public int fNumber;
-	
+	private FileOutputStream fo;
+	public PrintStream ps;
+
 	public static Main getMain() {
-		if ( _m == null) _m = new Main();
+		if (_m == null)
+			_m = new Main();
 		return _m;
 	}
-	
+
 	/**
 	 * Launch the application.
 	 */
@@ -44,42 +48,15 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	public void WriteMessageToFile(File file,String line){
-		try{
-			PrintStream ps = new PrintStream(new FileOutputStream(file));
-			ps.append(line);
-			ps.close();
-		}catch(FileNotFoundException e){
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
-	public File FileExist(String filepath){
-		File file=new File(filepath);    
-		if(!file.exists())    
-		{    
-		    try {    
-		        file.createNewFile();    
-		    } catch (IOException e) {    
-		        // TODO Auto-generated catch block    
-		        e.printStackTrace();    
-		    }    
-		}
-		return file;    
-	
-	}
-	public Boolean login(String serverAddress , String _id, String password) {
+
+	public Boolean login(String serverAddress, String _id, String password) {
 		try {
-			String filename = "data/Clientfile.txt";
-		    File outputfile = FileExist(filename);
 			configTest = new ConfigController("properties.json");
 			pNumber = configTest.getInt("ServerPortNumber", 9000);
 			Socket s = new Socket(serverAddress, pNumber);
-			
+
 			OutputStream os = s.getOutputStream();
-			PrintWriter writer = new PrintWriter(os,true);
+			PrintWriter writer = new PrintWriter(os, true);
 
 			InputStream is = s.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -88,11 +65,18 @@ public class Main {
 			writer.flush();
 
 			String reply = reader.readLine();
-			WriteMessageToFile(outputfile,reply);
 			if (reply.equals("accept")) {
-				
+
 				serverIP = serverAddress;
 				id = _id;
+
+				String filename = "data/UserOutput-" + id + ".txt";
+				try {
+					fo = new FileOutputStream(fileExist(filename), true);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				ps = new PrintStream(fo);
 				
 				openMessagePage(s, writer, reader);
 				successCount++;
@@ -104,14 +88,14 @@ public class Main {
 			is.close();
 			os.close();
 			s.close();
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		failCount++;
 		return false;
 	}
-	
+
 	private void openMessagePage(Socket s, PrintWriter w, BufferedReader r) {
 		try {
 			MessagePage frame = new MessagePage(s, w, r);
@@ -119,5 +103,32 @@ public class Main {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private File fileExist(String filepath) {
+		File file = new File(filepath);
+		if (!file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return file;
+	}
+	
+	public void writeMessageToFile(String line) {
+		synchronized (ps) {
+			ps.append(line);
+		}
+	}
+	
+	public void closeFile() {
+		try {
+			fo.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		ps.close();
 	}
 }
