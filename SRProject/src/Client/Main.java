@@ -70,7 +70,7 @@ public class Main {
 		return file;    
 	
 	}
-	public Boolean login(String serream os = verAddress , String _id, String password) {
+	public Boolean login(String serverAddress , String _id, String password) {
 		try {
 			String filename = "data/Clientfile.txt";
 		    File outputfile = FileExist(filename);
@@ -78,7 +78,7 @@ public class Main {
 			pNumber = configTest.getInt("ServerPortNumber", 9000);
 			Socket s = new Socket(serverAddress, pNumber);
 			
-			OutputSts.getOutputStream();
+			OutputStream os = s.getOutputStream();
 			PrintWriter writer = new PrintWriter(os,true);
 
 			InputStream is = s.getInputStream();
