@@ -95,7 +95,7 @@ public class Server extends JFrame {
 		logLabel.setBounds(10, 44, 414, 23);
 		contentPane.add(logLabel);
 
-		// TODO read parameters from file @RebertRen
+		// TODO read parameters from file @RobertRen
 		try {
 			serverSocket = new ServerSocket(9000);
 			logLabel.setText("服务器就绪。");
