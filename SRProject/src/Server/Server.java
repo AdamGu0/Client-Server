@@ -24,6 +24,8 @@ import teamEleven.configController.*;
 
 import org.json.*;
 
+import file.MessageFile;
+
 public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
@@ -127,6 +129,12 @@ public class Server extends JFrame {
 			e1.printStackTrace();
 		}
 		ps = new PrintStream(fo);
+		
+		try {
+			MessageFile.zipFiles();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 
 	private void closeServer() {
