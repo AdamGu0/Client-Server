@@ -37,7 +37,7 @@ public class MessageFile {
 
 			ZipOutputStream zipOut;
 			if (!fileMap.containsKey(date)) {
-				zipOut = new ZipOutputStream(new FileOutputStream(new File("data/" + date + ".zip")));
+				zipOut = new ZipOutputStream(new FileOutputStream(new File("data/zip/" + date + ".zip")));
 				fileMap.put(date, zipOut);
 			} else
 				zipOut = fileMap.get(date);
