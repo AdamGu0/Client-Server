@@ -3,6 +3,8 @@ package Client;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.JLabel;
 
@@ -70,7 +72,7 @@ public class Main {
 				serverIP = serverAddress;
 				id = _id;
 
-				String filename = "data/UserOutput-" + id + ".txt";
+				String filename = "data/" + getDate() + "-UserOutput-" + id + ".txt";
 				try {
 					fo = new FileOutputStream(fileExist(filename), true);
 				} catch (FileNotFoundException e1) {
@@ -130,5 +132,10 @@ public class Main {
 			e.printStackTrace();
 		}
 		ps.close();
+	}
+	
+	private String getDate() {
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		return df.format(new Date());
 	}
 }

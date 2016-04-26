@@ -9,6 +9,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JButton;
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
+
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import java.awt.event.MouseAdapter;
@@ -118,7 +120,7 @@ public class Server extends JFrame {
 		totalLicense = new MultiMaxNumOfMessage(100);
 		freqLicense = new MultiFrequencyRestriction(1);
 		
-		String filename = "data/ServerOutput.txt";
+		String filename = "data/" + getDate() + "-ServerOutput.txt";
 		try {
 			fo = new FileOutputStream(fileExist(filename), true);
 		} catch (FileNotFoundException e1) {
@@ -264,6 +266,11 @@ public class Server extends JFrame {
 		synchronized (ps) {
 			ps.append(line);
 		}
+	}
+	
+	private String getDate() {
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		return df.format(new Date());
 	}
 
 	class MessageThread extends Thread {
