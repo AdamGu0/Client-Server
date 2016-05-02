@@ -30,8 +30,9 @@ public class Server extends JFrame {
 	private JPanel contentPane;
 	public JLabel logLabel;
 	public ConfigController configTest;
-	private ArrayList<String> userList;
-	private ArrayList<MessageThread> messageThreads;
+	private HashSet<User> userList;
+	private HashSet<String> groupList;
+	//private HashSet<MessageThread> messageThreads;
 	public int validLoginCount;
 	public int invalidLoginCount;
 	public int forwardCount;
@@ -70,8 +71,10 @@ public class Server extends JFrame {
 				closeServer();
 			}
 		});
-		userList = new ArrayList<String>();
-		messageThreads = new ArrayList<MessageThread>();
+		userList = new HashSet<User>();
+		groupList = new HashSet<String>();
+		groupList.add("Default");
+		//messageThreads = new HashSet<MessageThread>();
 		validLoginCount = 0;
 		invalidLoginCount = 0;
 		forwardCount = 0;
@@ -149,9 +152,9 @@ public class Server extends JFrame {
 	}
 
 	private void closeThreads() throws IOException {
-		synchronized (messageThreads) {
-			for (MessageThread t : messageThreads)
-				t.close();
+		synchronized (userList) {
+			for (User u : userList)
+				u.thread.close();
 		}
 	}
 
@@ -192,8 +195,10 @@ public class Server extends JFrame {
 					pw.flush();
 					totalLicense.addMap(username);
 					freqLicense.addMap(username);
-					synchronized (messageThreads) {
-						messageThreads.add(new MessageThread(socket, pw, br, username));
+					synchronized (userList) {
+						User u = new User(username);
+						u.thread = new MessageThread(socket, pw, br, u);
+						userList.add(u);
 					}
 				} else {
 					invalidLoginCount++;
@@ -218,14 +223,12 @@ public class Server extends JFrame {
 
 	private boolean validateUser(String username, String password) {
 		synchronized (userList) {
-			if (userList.contains(username))
-				return false;
-		} // 查重复
-		if (!validateLogin(username, password))
-			return false; // 验证密码
-		synchronized (userList) {
-			userList.add(username);
+			for (User user : userList) {
+				if (user.id.equals(username)) return false; // 查重复
+			}
 		}
+		if (!validateLogin(username, password)) // 验证密码
+			return false;
 		return true;
 	}
 
@@ -248,9 +251,17 @@ public class Server extends JFrame {
 	}
 
 	private void sendMessages(String id, String message) {
-		synchronized (messageThreads) {
-			for (MessageThread t : messageThreads)
-				t.forwardMessage(id, message);
+		synchronized (userList) {
+			for (User u : userList)
+				u.thread.forwardMessage(id, message);
+		}
+	}
+	
+	private void sendMessages(User from, String message) {
+		synchronized (userList) {
+			for (User to : userList) {
+				if (to.group.equals(from.group)) to.thread.forwardMessage(from.id, message);
+			}
 		}
 	}
 
@@ -285,18 +296,50 @@ public class Server extends JFrame {
 		private Socket client;
 		private BufferedReader reader;
 		private PrintWriter writer;
-		private String id;
+		private User user;
 
-		public MessageThread(Socket s, PrintWriter w, BufferedReader r, String _id) throws IOException {
+		public MessageThread(Socket s, PrintWriter w, BufferedReader r, User user) throws IOException {
 			client = s;
 			writer = w;
 			reader = r;
-			id = _id;
+			this.user = user;
 			start();
 		}
 
+		private void chooseGroup() throws IOException {
+			String groupInfo = "group:";
+			for (String g : groupList) {
+				groupInfo += g + ";;;";
+			}
+			sendMessage(groupInfo);
+			String group;
+			while (true) {
+				String reply = reader.readLine();
+				String type = reply.substring(0, 3);
+				group = reply.substring(4);
+				
+				if (type.equals("SEL")) {
+					break;
+				} else if (type.equals("NEW")) {
+					boolean added;
+					synchronized (groupList) {
+						added = groupList.add(group);
+					}
+					if (added) {
+						sendMessage("accept");
+						break;
+					} else {
+						sendMessage("refuse");
+						continue;
+					}
+				}
+			}
+			user.group = group;
+		}
+		
 		public void run() {
 			try {
+				chooseGroup();
 				while (true) {
 					String line = reader.readLine();
 
@@ -305,19 +348,19 @@ public class Server extends JFrame {
 						return;
 					}
 
-					if (!totalLicense.CheckByKey(id)) {
+					if (!totalLicense.CheckByKey(user.id)) {
 						sendMessage("服务器：您已超过可发送的消息上限，即将断开连接。");
 						logout();
 						return;
 					}
-					if (!freqLicense.CheckByKey(id)) {
+					if (!freqLicense.CheckByKey(user.id)) {
 						sendMessage("服务器：您发送消息太过频繁，请稍后再试。");
 						continue;
 					}
 
-					logLabel.setText(id + ": " + line);
-					sendMessages(id, line);
-					writeMessageToFile(id + ": " + line + "\n");
+					logLabel.setText(user.id + ": " + line);
+					sendMessages(user, line);
+					writeMessageToFile(user.id + ": " + line + "\n");
 				}
 
 			} catch (IOException e) {
@@ -335,16 +378,14 @@ public class Server extends JFrame {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			logLabel.setText(id + " 已登出");
-			synchronized (messageThreads) {
-				messageThreads.remove(this);
-			}
+			logLabel.setText(user.id + " 已登出");
+			
 			synchronized (userList) {
-				userList.remove(id);
+				userList.remove(user);
 			}
 
-			totalLicense.deleteMap(id);
-			freqLicense.deleteMap(id);
+			totalLicense.deleteMap(user.id);
+			freqLicense.deleteMap(user.id);
 		}
 
 		protected void close() throws IOException {
@@ -354,7 +395,7 @@ public class Server extends JFrame {
 		}
 
 		public void forwardMessage(String _id, String message) {
-			if (_id.equals(id))
+			if (_id.equals(user.id))
 				return;
 			sendMessage(_id + ": " + message);
 			forwardCount();

@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import teamEleven.configController.*;
 
@@ -23,6 +24,7 @@ public class Main {
 
 	public String serverIP;
 	public String id;
+	public String group;
 	public int failCount;
 	public int successCount;
 	public JLabel logLabel;
@@ -80,6 +82,34 @@ public class Main {
 				}
 				ps = new PrintStream(fo);
 				
+				// choose group
+				reply = reader.readLine();
+				String[] groups = reply.substring(6, reply.length() - 3).split(";;;");
+				String hint = "请选择一个群组：";
+				while (true) {
+					String selection = (String) JOptionPane.showInputDialog(null, "若新建群组，请点击取消。", hint,
+							JOptionPane.INFORMATION_MESSAGE, null, groups, groups[0]);
+					if (selection == null) {
+						selection = (String) JOptionPane.showInputDialog("请输入群组名：");
+						if (selection == null) continue;
+						writer.write("NEW:" + selection + "\n");
+						writer.flush();
+						reply = reader.readLine();
+						if (reply.equals("accept")) {
+							group = selection;
+							break;
+						} else {
+							hint = "该群组已存在，请重新选择:";
+							continue;
+						}
+					} else {
+						writer.write("SEL:" + selection + "\n");
+						writer.flush();
+						group = selection;
+						break;
+					}
+				}
+				
 				openMessagePage(s, writer, reader);
 				successCount++;
 				return true;
@@ -97,7 +127,7 @@ public class Main {
 		failCount++;
 		return false;
 	}
-
+	
 	private void openMessagePage(Socket s, PrintWriter w, BufferedReader r) {
 		try {
 			MessagePage frame = new MessagePage(s, w, r);

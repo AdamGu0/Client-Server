@@ -73,7 +73,7 @@ public class MessagePage extends JFrame {
 		JLabel idLabel = new JLabel("id");
 		idLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		panel.add(idLabel);
-		idLabel.setText("用户名:" + m.id + " 服务器:" + m.serverIP);
+		idLabel.setText("用户名:" + m.id + " 群组:" + m.group + " 服务器:" + m.serverIP);
 		
 		JButton logoutButton = new JButton("\u767B\u51FA");
 		logoutButton.addActionListener(new ActionListener() {
