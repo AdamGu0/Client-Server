@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -32,6 +33,7 @@ public class Main {
 	public int pNumber;
 	public int tNumber;
 	public int fNumber;
+	public long fileLimit;
 	private FileOutputStream fo;
 	public PrintStream ps;
 
@@ -75,11 +77,15 @@ public class Main {
 				id = _id;
 
 				String filename = "data/" + getDate() + "-UserOutput-" + id + ".txt";
-				try {
-					fo = new FileOutputStream(fileExist(filename), true);
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				}
+				if(fileLimit(filename,fileLimit)){
+					try {
+						fo = new FileOutputStream(fileExist(filename), true);
+						} catch (FileNotFoundException e1) {
+							e1.printStackTrace();
+							} 
+					}else{
+						logLabel.setText("文件已超大小限制");
+					}
 				ps = new PrintStream(fo);
 				
 				// choose group
@@ -128,6 +134,16 @@ public class Main {
 		return false;
 	}
 	
+	private boolean fileLimit(String filepath,long lengthLimit){
+		File file = new File(filepath);
+		long length = file.length();
+		if(length>lengthLimit){
+			
+			return false;
+		}else return true;
+		
+	}
+	
 	private void openMessagePage(Socket s, PrintWriter w, BufferedReader r) {
 		try {
 			MessagePage frame = new MessagePage(s, w, r);
@@ -149,8 +165,11 @@ public class Main {
 		return file;
 	}
 	
+	
 	public void writeMessageToFile(String line) {
 		synchronized (ps) {
+			
+			ps.append(getDate());
 			ps.append(line);
 		}
 	}

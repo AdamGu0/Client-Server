@@ -39,6 +39,7 @@ public class Server extends JFrame {
 	public int pNumber;
 	public int tNumber;
 	public int fNumber;
+	public long fileLimit;
 	private ServerSocket serverSocket;
 	private MultiMaxNumOfMessage totalLicense;
 	private MultiFrequencyRestriction freqLicense;
@@ -79,6 +80,7 @@ public class Server extends JFrame {
 		invalidLoginCount = 0;
 		forwardCount = 0;
 		pNumber = 0;
+		fileLimit = 409600;
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -126,11 +128,15 @@ public class Server extends JFrame {
 		freqLicense = new MultiFrequencyRestriction(1);
 		
 		String filename = "data/" + getDate() + "-ServerOutput.txt";
-		try {
-			fo = new FileOutputStream(fileExist(filename), true);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+		if(fileLimit(filename,fileLimit)){
+			try {
+				fo = new FileOutputStream(fileExist(filename), true);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+					} 
+			}else{
+				logLabel.setText("文件已超大小限制");
+			}
 		ps = new PrintStream(fo);
 		
 		try {
@@ -269,6 +275,15 @@ public class Server extends JFrame {
 		forwardCount++;
 	}
 	
+	private boolean fileLimit(String filepath,long lengthLimit){
+		File file = new File(filepath);
+		long length = file.length();
+		if(length>lengthLimit){
+			
+			return false;
+		}else return true;
+		
+	}
 	private File fileExist(String filepath) {
 		File file = new File(filepath);
 		if (!file.exists()) {
@@ -283,6 +298,7 @@ public class Server extends JFrame {
 	
 	public void writeMessageToFile(String line) {
 		synchronized (ps) {
+			ps.append(getDate());
 			ps.append(line);
 		}
 	}
