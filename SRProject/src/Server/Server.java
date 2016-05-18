@@ -1,6 +1,7 @@
 package Server;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -9,6 +10,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JButton;
 import java.io.*;
 import java.net.*;
+import java.security.acl.Group;
 import java.text.SimpleDateFormat;
 
 import javax.swing.JLabel;
@@ -31,8 +33,8 @@ public class Server extends JFrame {
 	public JLabel logLabel;
 	public ConfigController configTest;
 	private HashSet<User> userList;
-	private HashSet<String> groupList;
-	//private HashSet<MessageThread> messageThreads;
+	//private HashSet<String> groupList;
+	private ConcurrentHashMap<String, ArrayList<String>> groupMap;
 	public int validLoginCount;
 	public int invalidLoginCount;
 	public int forwardCount;
@@ -73,9 +75,8 @@ public class Server extends JFrame {
 			}
 		});
 		userList = new HashSet<User>();
-		groupList = new HashSet<String>();
-		groupList.add("Default");
-		//messageThreads = new HashSet<MessageThread>();
+		groupMap = new ConcurrentHashMap<String, ArrayList<String>>();
+		groupMap.put("Default", new ArrayList<String>());
 		validLoginCount = 0;
 		invalidLoginCount = 0;
 		forwardCount = 0;
@@ -270,6 +271,13 @@ public class Server extends JFrame {
 			}
 		}
 	}
+	
+	private void saveGroupMessage(String group, String message) {
+		ArrayList<String> mList = groupMap.get(group);
+		synchronized (mList) {
+			mList.add(message);
+		}
+	}
 
 	private synchronized void forwardCount() {
 		forwardCount++;
@@ -324,7 +332,9 @@ public class Server extends JFrame {
 
 		private void chooseGroup() throws IOException {
 			String groupInfo = "group:";
-			for (String g : groupList) {
+			Enumeration<String> e = groupMap.keys();
+			while (e.hasMoreElements()) {
+				String g = e.nextElement();
 				groupInfo += g + ";;;";
 			}
 			sendMessage(groupInfo);
@@ -337,25 +347,28 @@ public class Server extends JFrame {
 				if (type.equals("SEL")) {
 					break;
 				} else if (type.equals("NEW")) {
-					boolean added;
-					synchronized (groupList) {
-						added = groupList.add(group);
-					}
-					if (added) {
-						sendMessage("accept");
-						break;
-					} else {
+					if (groupMap.containsKey(group)) {
 						sendMessage("refuse");
 						continue;
 					}
+					groupMap.put(group, new ArrayList<String>());
+					sendMessage("accept");
+					break;
 				}
 			}
 			user.group = group;
 		}
 		
+		private void sendGroupMessages() {
+			for (String m : groupMap.get(user.group)) {
+				sendMessage(m);
+			}
+		}
+		
 		public void run() {
 			try {
 				chooseGroup();
+				sendGroupMessages();
 				while (true) {
 					String line = reader.readLine();
 
@@ -376,6 +389,7 @@ public class Server extends JFrame {
 
 					logLabel.setText(user.id + ": " + line);
 					sendMessages(user, line);
+					saveGroupMessage(user.group, user.id + ": " + line);
 					writeMessageToFile(user.id + ": " + line + "\n");
 				}
 
